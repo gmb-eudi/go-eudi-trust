@@ -1,0 +1,6 @@
+* @gmb-eudi/maintainers
+
+# Dependency and CI changes require maintainer review — supply-chain surface
+go.mod @gmb-eudi/maintainers
+go.sum @gmb-eudi/maintainers
+/.github/ @gmb-eudi/maintainers

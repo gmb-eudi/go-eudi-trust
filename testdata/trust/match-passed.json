@@ -1,0 +1,10 @@
+{
+  "verdict": "PASSED",
+  "snapshot": "3f7a1c9e5b2d8f4a6c0e2b7d9f1a3c5e7b9d1f3a5c7e9b1d3f5a7c9e1b3d5f7a",
+  "checkedAt": "2026-07-01T06:05:00Z",
+  "checks": [
+    { "name": "TL_VERSION_CONSISTENCY", "result": "PASSED" },
+    { "name": "SERVICE_STATUS_GRANTED", "result": "PASSED" },
+    { "name": "CERT_WITHIN_SERVICE_VALIDITY", "result": "PASSED" }
+  ]
+}
