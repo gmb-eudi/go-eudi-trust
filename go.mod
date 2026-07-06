@@ -2,7 +2,7 @@ module github.com/gmb-eudi/go-eudi-trust
 
 go 1.26
 
-require github.com/gmb-eudi/go-eudi-crypto v0.0.1
+require github.com/gmb-eudi/go-eudi-crypto v0.0.2
 
 require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
