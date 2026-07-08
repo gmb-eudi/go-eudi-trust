@@ -45,6 +45,10 @@ type Anchor struct {
 	Uses               []string  `json:"uses,omitempty"`
 	// TLSequence is additive (absent on older servers ⇒ 0).
 	TLSequence int64 `json:"tlSequence,omitempty"`
+	// UseCases is additive (GAP-04, extension E2, docs/trust-service-api.md
+	// E2): accredited EAA use cases; absent on non-EAA anchors or older
+	// servers ⇒ nil, never an error.
+	UseCases []string `json:"useCases,omitempty"`
 }
 
 // AnchorsResponse mirrors GET /v1/anchors.json.

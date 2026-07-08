@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -74,6 +75,38 @@ func TestAnchorsGoldenMapping(t *testing.T) {
 		if a.TLSequence != 42 {
 			t.Errorf("anchor %d: TLSequence = %d, want 42", i, a.TLSequence)
 		}
+	}
+}
+
+// GAP-04 / extension E2 end-to-end (docs/trust-service-api.md E2): a
+// useCases array on the wire response survives through HTTPClient.Anchors
+// into the public AnchorSet — one anchor carries useCases, the sibling
+// anchor (fixture has no useCases) stays nil.
+func TestAnchorsUseCasesMapping(t *testing.T) {
+	body := mutate(t, fixture(t, "anchors-pid-lv-v1.json"), func(m map[string]any) {
+		firstAnchor(t, m)["useCases"] = []any{"pharmacy", "age_verification"}
+	})
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("ETag", `"`+snapV1+`"`)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(body)
+	}))
+	t.Cleanup(srv.Close)
+	c := newTestClient(t, srv, newClock(t0))
+
+	set, ok, err := c.Anchors(context.Background(), trust.PIDProvider, "LV", "")
+	if err != nil || !ok {
+		t.Fatalf("Anchors: ok=%v err=%v", ok, err)
+	}
+	if len(set.Anchors) != 2 {
+		t.Fatalf("len(Anchors) = %d, want 2", len(set.Anchors))
+	}
+	want := []string{"pharmacy", "age_verification"}
+	if !reflect.DeepEqual(set.Anchors[0].UseCases, want) {
+		t.Errorf("Anchors[0].UseCases = %#v, want %#v", set.Anchors[0].UseCases, want)
+	}
+	if set.Anchors[1].UseCases != nil {
+		t.Errorf("Anchors[1].UseCases = %#v, want nil (fixture anchor has no useCases)", set.Anchors[1].UseCases)
 	}
 }
 

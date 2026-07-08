@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -174,6 +175,35 @@ func TestDecodeAnchorsToleratesUnknownFields(t *testing.T) {
 	if _, err := wire.DecodeAnchors(body); err != nil {
 		t.Fatalf("unknown fields must be tolerated, got %v", err)
 	}
+}
+
+// GAP-04 / extension E2 (docs/trust-service-api.md E2): useCases is optional
+// per-anchor metadata (accredited EAA use cases). Present decodes verbatim
+// in order; absent decodes as nil — never an error, never a forced non-nil
+// empty slice.
+func TestDecodeAnchorsUseCases(t *testing.T) {
+	t.Run("present", func(t *testing.T) {
+		body := mutate(t, fixture(t, "anchors-pid-lv-v1.json"), func(m map[string]any) {
+			firstAnchor(t, m)["useCases"] = []any{"pharmacy", "age_verification"}
+		})
+		resp, err := wire.DecodeAnchors(body)
+		if err != nil {
+			t.Fatalf("DecodeAnchors: %v", err)
+		}
+		want := []string{"pharmacy", "age_verification"}
+		if !reflect.DeepEqual(resp.Anchors[0].UseCases, want) {
+			t.Errorf("Anchors[0].UseCases = %#v, want %#v", resp.Anchors[0].UseCases, want)
+		}
+	})
+	t.Run("absent", func(t *testing.T) {
+		resp, err := wire.DecodeAnchors(fixture(t, "anchors-pid-lv-v1.json"))
+		if err != nil {
+			t.Fatalf("DecodeAnchors: %v", err)
+		}
+		if resp.Anchors[0].UseCases != nil {
+			t.Errorf("Anchors[0].UseCases = %#v, want nil", resp.Anchors[0].UseCases)
+		}
+	})
 }
 
 func TestDecodeSnapshotGolden(t *testing.T) {

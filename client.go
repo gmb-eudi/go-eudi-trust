@@ -167,6 +167,7 @@ func (c *HTTPClient) Anchors(ctx context.Context, t AnchorType, territory, etag 
 			Status:     w.Status,
 			ValidUntil: w.NotAfter,
 			TLSequence: w.TLSequence,
+			UseCases:   w.UseCases, // GAP-04: accredited EAA use cases (extension E2)
 		})
 	}
 	return set, true, nil

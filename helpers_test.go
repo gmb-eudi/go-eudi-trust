@@ -127,3 +127,35 @@ func mustUnmarshal(t *testing.T, data []byte, v any) {
 		t.Fatal(err)
 	}
 }
+
+// mutate round-trips a valid fixture through map[string]any and applies fn —
+// used to build response bodies with fields the recorded fixtures don't
+// carry (e.g. useCases) without hand-editing golden JSON.
+func mutate(t *testing.T, valid []byte, fn func(m map[string]any)) []byte {
+	t.Helper()
+	var m map[string]any
+	if err := json.Unmarshal(valid, &m); err != nil {
+		t.Fatal(err)
+	}
+	fn(m)
+	out, err := json.Marshal(m)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+// firstAnchor returns anchors[0] of a decoded fixture map for in-place
+// mutation (see mutate).
+func firstAnchor(t *testing.T, m map[string]any) map[string]any {
+	t.Helper()
+	anchors, ok := m["anchors"].([]any)
+	if !ok || len(anchors) == 0 {
+		t.Fatal("fixture has no anchors array")
+	}
+	a, ok := anchors[0].(map[string]any)
+	if !ok {
+		t.Fatal("anchors[0] is not an object")
+	}
+	return a
+}
