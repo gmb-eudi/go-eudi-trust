@@ -24,7 +24,7 @@ const (
 	// PIDProviderStatus and its *_status siblings are status-list /
 	// Identifiers-list signer anchors (ADR-0010, GAP-01): the status service
 	// may be distinct from the issuer. Resolved status-first with issuer
-	// fallback by verifier-core statusAnchorTypesFor (WP-09).
+	// fallback by eudi-verifier-core statusAnchorTypesFor (WP-09).
 	PIDProviderStatus    AnchorType = "pid_provider_status"
 	QEAAProviderStatus   AnchorType = "qeaa_provider_status"
 	PubEAAProviderStatus AnchorType = "pub_eaa_provider_status"
@@ -52,7 +52,7 @@ func ValidAnchorType(t AnchorType) bool {
 // counterpart (ADR-0010): PIDProvider→PIDProviderStatus, etc. ok is false for
 // types with no status pairing (WalletProvider, AccessCA, WRPRCIssuer) and for
 // the *_status types themselves. Keeps the provider↔status pairing authoritative
-// in one place; consumers (verifier-core credtrust, GAP-03) derive status
+// in one place; consumers (eudi-verifier-core credtrust, GAP-03) derive status
 // anchor types from issuer types instead of hardcoding the string mapping.
 func StatusType(t AnchorType) (AnchorType, bool) {
 	switch t { //nolint:exhaustive // only issuer provider types have a status pairing; every other AnchorType (including the *_status types themselves) falls through to the explicit default below.

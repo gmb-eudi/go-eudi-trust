@@ -65,6 +65,6 @@ type StateChange struct {
 // of the Refresh/AnchorsFor/Status/States call that observed the change,
 // WITHOUT the cache lock held (re-entrant calls into the source are safe).
 // The library never logs (ADR-0004) — consumers turn transitions into
-// /health state and metrics (WP-09 verifier-core, WP-12 trust-cache-worker).
+// /health state and metrics (WP-09 eudi-verifier-core, WP-12 trust-cache-worker).
 // Callbacks must be fast and non-blocking.
 type StateCallback func(StateChange)
