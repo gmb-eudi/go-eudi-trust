@@ -28,7 +28,7 @@ func newTestClient(t *testing.T, srv *httptest.Server, clock *fakeClock) *trust.
 	return c
 }
 
-// Fixture round-trip (T-06.2 acceptance): wire fixture → public AnchorSet.
+// Fixture round-trip: wire fixture → public AnchorSet.
 func TestAnchorsGoldenMapping(t *testing.T) {
 	srv, _ := newFixtureServer(t, "anchors-pid-lv-v1.json")
 	clock := newClock(t0)
@@ -78,7 +78,7 @@ func TestAnchorsGoldenMapping(t *testing.T) {
 	}
 }
 
-// GAP-04 / extension E2 end-to-end (docs/trust-service-api.md E2): a
+// Extension E2 end-to-end (trust-service API contract): a
 // useCases array on the wire response survives through HTTPClient.Anchors
 // into the public AnchorSet — one anchor carries useCases, the sibling
 // anchor (fixture has no useCases) stays nil.
@@ -142,7 +142,7 @@ func TestAnchorsRequestShape(t *testing.T) {
 	}
 }
 
-// 304 = freshness confirmation: ok=false, nil error (WP-06 README).
+// 304 = freshness confirmation: ok=false, nil error.
 func TestAnchors304NotModified(t *testing.T) {
 	srv, _ := newFixtureServer(t, "anchors-pid-lv-v1.json")
 	c := newTestClient(t, srv, newClock(t0))
@@ -172,7 +172,7 @@ func TestAnchorsStaleFlag(t *testing.T) {
 	}
 }
 
-// Schema strictness (T-06.2 acceptance): missing valid_until = error;
+// Schema strictness: missing valid_until = error;
 // ETag/body divergence = error. Negative tests — must fail first.
 func TestAnchorsSchemaViolations(t *testing.T) {
 	t.Run("missing_valid_until", func(t *testing.T) {

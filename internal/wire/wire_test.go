@@ -62,7 +62,7 @@ func firstAnchor(t *testing.T, m map[string]any) map[string]any {
 	return a
 }
 
-// DTO golden tests (T-06.1 acceptance): decoded fields match the recorded
+// DTO golden tests: decoded fields match the recorded
 // fixtures, certificates parse, recomputed fingerprints match.
 func TestDecodeAnchorsGolden(t *testing.T) {
 	tests := []struct {
@@ -134,7 +134,7 @@ func TestDecodeAnchorsGolden(t *testing.T) {
 	}
 }
 
-// Contract strictness (feeds T-06.2 acceptance: missing valid_until = error).
+// Contract strictness (missing valid_until = error).
 // Negative tests — these MUST fail before wire.go exists and MUST pass after.
 func TestDecodeAnchorsRejectsContractViolations(t *testing.T) {
 	valid := fixture(t, "anchors-pid-lv-v1.json")
@@ -166,7 +166,7 @@ func TestDecodeAnchorsRejectsContractViolations(t *testing.T) {
 }
 
 // Additive-evolution tolerance: unknown fields must NOT be rejected — the
-// upstream API evolves additively (docs/trust-service-api.md §3, E1–E3).
+// upstream API evolves additively (trust-service API contract, E1–E3).
 func TestDecodeAnchorsToleratesUnknownFields(t *testing.T) {
 	body := mutate(t, fixture(t, "anchors-pid-lv-v1.json"), func(m map[string]any) {
 		m["futureField"] = "x"
@@ -177,7 +177,7 @@ func TestDecodeAnchorsToleratesUnknownFields(t *testing.T) {
 	}
 }
 
-// GAP-04 / extension E2 (docs/trust-service-api.md E2): useCases is optional
+// Extension E2 (trust-service API contract): useCases is optional
 // per-anchor metadata (accredited EAA use cases). Present decodes verbatim
 // in order; absent decodes as nil — never an error, never a forced non-nil
 // empty slice.
@@ -288,7 +288,7 @@ func TestDecodeMatchGolden(t *testing.T) {
 	}
 }
 
-// Unknown verdict = reject, never fall through (CLAUDE.md rule 7 analog of
+// Unknown verdict = reject, never fall through (fail-closed analog of
 // "unknown status-list format").
 func TestDecodeMatchRejects(t *testing.T) {
 	valid := fixture(t, "match-passed.json")

@@ -35,7 +35,7 @@ func matchServer(t *testing.T, file string) (*httptest.Server, *struct {
 	return srv, rec
 }
 
-// Verdict fields surface unmodified into the report (T-06.5 acceptance):
+// Verdict fields surface unmodified into the report (acceptance):
 // Raw is the exact response body, byte for byte.
 func TestMatchCertificateGolden(t *testing.T) {
 	srv, rec := matchServer(t, "match-passed.json")
@@ -172,7 +172,7 @@ func passedVerdict() trust.MatchVerdict {
 	}
 }
 
-// Verdict caching, short TTL (T-06.5): hit within TTL, keyed per
+// Verdict caching, short TTL: hit within TTL, keyed per
 // certificate, expired entries refetched, errors never cached.
 func TestVerdictCache(t *testing.T) {
 	certA := fixtureCert(t).Raw

@@ -13,10 +13,10 @@ import (
 )
 
 // ResolvedIssuer identifies the trust anchor an issuer chain resolved to.
-// It is recorded verbatim in the verification-report provenance (WP-06
-// Decisions: territory resolution order recorded verbatim). It carries
+// It is recorded verbatim in the verification-report provenance
+// (territory resolution order recorded verbatim). It carries
 // subjects, fingerprints and territory codes only — never key material or
-// attribute values (CLAUDE.md rule 3).
+// attribute values.
 type ResolvedIssuer struct {
 	Subject           string     // leaf certificate subject (RFC 2253 string)
 	AnchorSubject     string     // matched anchor certificate subject
@@ -24,13 +24,13 @@ type ResolvedIssuer struct {
 	AnchorType        AnchorType // the type the caller demanded
 	AnchorCountry     string     // anchor's territory verbatim ("EU"/"" = EU-level)
 	TerritoriesTried  []string   // resolution order, verbatim (e.g. ["LV", ""])
-	UseCases          []string   // GAP-04: matched anchor's accredited EAA use cases (Anchor.UseCases passthrough)
+	UseCases          []string   // matched anchor's accredited EAA use cases (Anchor.UseCases passthrough)
 }
 
 // clocked is the optional interface an AnchorSource implements to expose
 // its injected time source. *CachingSource implements it (Now). A source
 // without it falls back to time.Now().UTC() — production sources MUST
-// provide Now (docs/conventions.md: inject clocks into validity checks).
+// provide Now (inject clocks into validity checks).
 type clocked interface{ Now() time.Time }
 
 func sourceNow(src AnchorSource) time.Time {
@@ -42,17 +42,17 @@ func sourceNow(src AnchorSource) time.Time {
 
 // ResolveIssuerKey resolves an mdoc x5chain / SD-JWT x5c (raw DER
 // certificates, leaf first) to a verified issuer public key against
-// anchors of the required type (WP-06 README target interface — binding).
+// anchors of the required type.
 //
-// ARF §6.6.3.2: issuer chains terminate at the provider trust anchors from
-// the trusted-list infrastructure. ARF §6.6.3.6: the anchor TYPE scopes
+// [ARF §6.6.3.2]: issuer chains terminate at the provider trust anchors from
+// the trusted-list infrastructure. [ARF §6.6.3.6]: the anchor TYPE scopes
 // what it may authenticate — the caller names the type and a chain to any
-// other type fails (ErrChainUntrusted). Path validation is RFC 5280 §6.1
+// other type fails (ErrChainUntrusted). Path validation is [RFC 5280 §6.1]
 // via go-eudi-crypto.VerifyChain: explicit anchors only, required At time,
-// never the system pool (CLAUDE.md rules 4/6/7). EKU enforcement is the
-// format profiles' concern (WP-02/WP-03), so no EKUs are passed here.
+// never the system pool. EKU enforcement is the
+// format profiles' concern, so no EKUs are passed here.
 //
-// Territory resolution order (WP-06 Decisions): the issuing territory from
+// Territory resolution order: the issuing territory from
 // the certificate country attribute (leaf subject C, else leaf issuer C)
 // first, then EU-level ("") — recorded verbatim in TerritoriesTried. A
 // source error (e.g. ErrCacheExpired) aborts immediately: a degraded cache
@@ -101,7 +101,7 @@ func ResolveIssuerKey(src AnchorSource, chain [][]byte, t AnchorType) (stdcrypto
 		}
 		chains, err := eudicrypto.VerifyChain(leaf, intermediates, eudicrypto.ChainOptions{
 			Anchors: anchorCerts,
-			At:      now, // RFC 5280 §6.1 time from the source's injected clock
+			At:      now, // [RFC 5280 §6.1] time from the source's injected clock
 		})
 		if err != nil {
 			continue // not trusted in this territory — try the next in order
@@ -125,7 +125,7 @@ func ResolveIssuerKey(src AnchorSource, chain [][]byte, t AnchorType) (stdcrypto
 
 // territoryOrder derives the resolution order from the certificate country
 // attribute: leaf subject C, else leaf issuer C, always followed by
-// EU-level "" (WP-06 Decisions). Codes are upper-cased for TL territory
+// EU-level "". Codes are upper-cased for TL territory
 // comparison.
 func territoryOrder(leaf *x509.Certificate) []string {
 	if len(leaf.Subject.Country) > 0 && leaf.Subject.Country[0] != "" {

@@ -7,7 +7,7 @@ import (
 
 // SourceState is the degraded-mode state of one anchor type in a
 // CachingSource. The ladder implements the fail-closed staleness policy of
-// docs/trust-service-api.md §4: X-Trust-Stale or cache older than MaxAge ⇒
+// Trust-service API contract: X-Trust-Stale or cache older than MaxAge ⇒
 // degraded; beyond the per-type grace ⇒ fail closed.
 type SourceState int
 
@@ -64,7 +64,7 @@ type StateChange struct {
 // StateCallback receives state transitions synchronously, in the goroutine
 // of the Refresh/AnchorsFor/Status/States call that observed the change,
 // WITHOUT the cache lock held (re-entrant calls into the source are safe).
-// The library never logs (ADR-0004) — consumers turn transitions into
-// /health state and metrics (WP-09 eudi-verifier-core, WP-12 trust-cache-worker).
+// The library never logs — consumers turn transitions into
+// /health state and metrics (eudi-verifier-core, trust-cache-worker).
 // Callbacks must be fast and non-blocking.
 type StateCallback func(StateChange)

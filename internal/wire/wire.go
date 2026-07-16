@@ -1,7 +1,7 @@
 // Package wire holds the JSON DTOs of the trust-anchor service API,
-// mirroring docs/trust-service-api.md and the service's
+// mirroring the trust-service API contract and the service's
 // routes/response/response.go + trust/anchor.go. Responses are UNTRUSTED
-// input: every decoder is fuzzed and must not panic (CLAUDE.md rule 5).
+// input: every decoder is fuzzed and must not panic.
 //
 // Contract strictness: required fields must be present and valid (fail
 // closed); unknown fields are tolerated because the upstream API evolves
@@ -45,8 +45,8 @@ type Anchor struct {
 	Uses               []string  `json:"uses,omitempty"`
 	// TLSequence is additive (absent on older servers ⇒ 0).
 	TLSequence int64 `json:"tlSequence,omitempty"`
-	// UseCases is additive (GAP-04, extension E2, docs/trust-service-api.md
-	// E2): accredited EAA use cases; absent on non-EAA anchors or older
+	// UseCases is additive (extension E2 of the trust-service API
+	// contract): accredited EAA use cases; absent on non-EAA anchors or older
 	// servers ⇒ nil, never an error.
 	UseCases []string `json:"useCases,omitempty"`
 }
@@ -73,7 +73,7 @@ type TerritorySummary struct {
 
 // SnapshotResponse mirrors GET /v1/snapshot. Pending/PendingBootstrap/
 // Bootstrap are kept raw — the verifier only needs presence/counts
-// (docs/trust-service-api.md §4: pending bootstrap presence → ops alert).
+// (trust-service API contract: pending bootstrap presence → ops alert).
 type SnapshotResponse struct {
 	ID               string             `json:"id"`
 	PrevID           string             `json:"prevId,omitempty"`
@@ -89,7 +89,7 @@ type SnapshotResponse struct {
 }
 
 // MatchResponse mirrors POST /v1/match (extension E4 — mock contract;
-// ETSI TS 119 615 §4.4 verdicts).
+// [ETSI TS 119 615 §4.4] verdicts).
 type MatchResponse struct {
 	Verdict   string          `json:"verdict"`
 	Snapshot  string          `json:"snapshot"`
@@ -98,7 +98,7 @@ type MatchResponse struct {
 }
 
 // DecodeAnchors decodes and validates a /v1/anchors.json body.
-// docs/trust-service-api.md §4 + WP-06 T-06.2: required fields present,
+// Trust-service API contract: required fields present,
 // certDer parses, recomputed SHA-256 equals fingerprintSha256, and
 // notAfter (valid_until) is non-zero — an anchor without an expiry cannot
 // be aged fail-closed.
@@ -122,7 +122,7 @@ func DecodeAnchors(raw []byte) (*AnchorsResponse, error) {
 }
 
 // validate enforces per-anchor contract strictness. Error text carries
-// fingerprints and field names only — never certificate bytes (rule 3).
+// fingerprints and field names only — never certificate bytes.
 func (a *Anchor) validate() error {
 	if len(a.CertDER) == 0 {
 		return fmt.Errorf("%w: missing certDer", ErrInvalid)
@@ -169,8 +169,8 @@ func DecodeSnapshot(raw []byte) (*SnapshotResponse, error) {
 }
 
 // DecodeMatch decodes and validates a /v1/match body (E4 mock contract).
-// ETSI TS 119 615 §4.4: only PASSED/FAILED/WARNING are defined — an unknown
-// verdict is rejected, never interpreted (CLAUDE.md rule 7).
+// [ETSI TS 119 615 §4.4]: only PASSED/FAILED/WARNING are defined — an unknown
+// verdict is rejected, never interpreted (fail closed).
 func DecodeMatch(raw []byte) (*MatchResponse, error) {
 	var resp MatchResponse
 	if err := json.Unmarshal(raw, &resp); err != nil {

@@ -12,16 +12,16 @@ import (
 	"github.com/gmb-eudi/go-eudi-trust/internal/wire"
 )
 
-// Doer is the injected HTTP transport (ADR-0004). Services wire a
+// Doer is the injected HTTP transport. Services wire a
 // DPoP-signing client, an mTLS *http.Client, or a plain internal-network
 // client per TRUST_AUTH_MODE — this library never constructs transports or
-// credentials (docs/trust-service-api.md §1).
+// credentials (per the trust-service API contract).
 type Doer interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
-// Client is the typed trust-service API client (WP-06 README target
-// interface — binding). *HTTPClient implements it; CachingSource consumes it.
+// Client is the typed trust-service API client.
+// *HTTPClient implements it; CachingSource consumes it.
 type Client interface {
 	// Anchors fetches GET /v1/anchors.json?type=&territory= with
 	// If-None-Match revalidation. ok=false on 304 (cache still fresh).
@@ -43,7 +43,7 @@ var _ Client = (*HTTPClient)(nil)
 type ClientOption func(*HTTPClient)
 
 // WithClock injects the time source stamped into AnchorSet.FetchedAt
-// (docs/conventions.md: inject clocks). Defaults to time.Now().UTC.
+// (inject clocks). Defaults to time.Now().UTC.
 func WithClock(clock func() time.Time) ClientOption {
 	return func(c *HTTPClient) { c.clock = clock }
 }
@@ -105,7 +105,7 @@ func drainClose(resp *http.Response) {
 }
 
 // Anchors implements Client.
-// docs/trust-service-api.md §4: GET /v1/anchors.json with type=
+// Trust-service API contract: GET /v1/anchors.json with type=
 // (+ optional territory=), If-None-Match revalidation (304 = freshness
 // confirmation), X-Trust-Stale mapped onto AnchorSet.Stale. Contract
 // strictness: schema violations (including missing valid_until and
@@ -173,7 +173,7 @@ func (c *HTTPClient) Anchors(ctx context.Context, t AnchorType, territory, etag 
 	return set, true, nil
 }
 
-// Snapshot implements Client (docs/trust-service-api.md §4: /v1/snapshot
+// Snapshot implements Client (trust-service API contract: /v1/snapshot
 // feeds trust-cache-worker telemetry).
 func (c *HTTPClient) Snapshot(ctx context.Context) (SnapshotMeta, error) {
 	resp, err := c.get(ctx, "/v1/snapshot", nil, "")

@@ -18,10 +18,10 @@ import (
 
 // MatchVerdict is an ETSI TS 119 615 certificate-vs-trusted-list verdict
 // from the trust service. Raw carries the full response body UNMODIFIED —
-// it is surfaced verbatim into the verification report (T-06.5 acceptance:
+// it is surfaced verbatim into the verification report (acceptance:
 // verdict fields surface unmodified).
 type MatchVerdict struct {
-	Verdict   string // TS 119 615 §4.4: PASSED | FAILED | WARNING
+	Verdict   string // [ETSI TS 119 615 §4.4]: PASSED | FAILED | WARNING
 	Snapshot  string
 	CheckedAt time.Time
 	Raw       json.RawMessage
@@ -40,10 +40,10 @@ var (
 
 // MatchCertificate calls POST /v1/match (trust-anchor extension E4 — the
 // recorded fixtures under testdata/trust/ are the contract until the
-// endpoint lands upstream; WP-06 Decisions). v1 verification does NOT
+// endpoint lands upstream). v1 verification does NOT
 // depend on it: chains are validated locally by ResolveIssuerKey; this
 // passthrough exists for report enrichment where a server-side
-// TS 119 615 §4.3/§4.4 verdict is wanted.
+// [ETSI TS 119 615 §4.3/§4.4] verdict is wanted.
 func (c *HTTPClient) MatchCertificate(ctx context.Context, certDER []byte) (MatchVerdict, error) {
 	if len(certDER) == 0 {
 		return MatchVerdict{}, fmt.Errorf("%w: empty certificate", ErrChainParse)
@@ -87,7 +87,7 @@ func (c *HTTPClient) MatchCertificate(ctx context.Context, certDER []byte) (Matc
 }
 
 // VerdictCache caches verdicts by certificate SHA-256 for a short TTL
-// (T-06.5). Verdicts are snapshot-scoped and cheap to refetch — consuming
+// Verdicts are snapshot-scoped and cheap to refetch — consuming
 // services should keep the TTL low (order of minutes). Errors are never
 // cached. Safe for concurrent use.
 type VerdictCache struct {

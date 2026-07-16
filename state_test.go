@@ -46,7 +46,7 @@ func newCacheWithCallback(t *testing.T, client trust.Client, clock *fakeClock, g
 	return src
 }
 
-// Full lifecycle (T-06.6 acceptance: state transitions observable via the
+// Full lifecycle (state transitions observable via the
 // callback interface): Unknown→Fresh→Stale→Expired→Fresh, each fired
 // exactly once, with snapshot id and injected-clock timestamps.
 func TestStateTransitionLifecycle(t *testing.T) {

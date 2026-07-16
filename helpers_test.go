@@ -26,7 +26,7 @@ func fixture(t *testing.T, name string) []byte {
 	return b
 }
 
-// fakeClock is a mutable injected time source (docs/conventions.md: inject
+// fakeClock is a mutable injected time source (inject
 // clocks into anything validating validity windows).
 type fakeClock struct {
 	mu sync.Mutex

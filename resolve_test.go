@@ -15,7 +15,7 @@ import (
 	trust "github.com/gmb-eudi/go-eudi-trust"
 )
 
-// ---- synthetic PKI (generated in-test, never committed — ADR-0007) ----
+// ---- synthetic PKI (generated in-test, never committed) ----
 
 type testCA struct {
 	cert *x509.Certificate
@@ -150,7 +150,7 @@ func sourceWith(typ trust.AnchorType, country string, cas ...*testCA) *stubSourc
 // ---- tests ----
 
 // Happy path: leaf C=LV chains to an LV PID-provider anchor; provenance
-// records the territory order verbatim (WP-06 Decisions).
+// records the territory order verbatim.
 func TestResolveHappyPathIssuingTerritory(t *testing.T) {
 	ca := newTestCA(t, "LV PID IACA", "LV")
 	leafDER, leafKey := ca.issueLeaf(t, "LV PID DS", "LV")
@@ -212,7 +212,7 @@ func TestResolveWithIntermediate(t *testing.T) {
 	}
 }
 
-// Chain to the wrong anchor TYPE fails (T-06.4 acceptance; ARF §6.6.3.6):
+// Chain to the wrong anchor TYPE fails ([ARF §6.6.3.6]):
 // the same CA registered as wallet_provider must not validate a PID chain.
 func TestResolveWrongAnchorTypeFails(t *testing.T) {
 	ca := newTestCA(t, "LV Wallet CA", "LV")
@@ -251,8 +251,8 @@ func TestResolveEULevelFallback(t *testing.T) {
 	}
 }
 
-// Cross-country anchors are honored ONLY when country="" (T-06.4
-// acceptance): a DE leaf must not resolve against an anchor filed under LV.
+// Cross-country anchors are honored ONLY when country=""
+// (acceptance): a DE leaf must not resolve against an anchor filed under LV.
 func TestResolveCrossCountryNotHonored(t *testing.T) {
 	ca := newTestCA(t, "LV PID IACA B", "LV")
 	leafDER, _ := ca.issueLeaf(t, "DE PID DS", "DE")
@@ -268,7 +268,7 @@ func TestResolveCrossCountryNotHonored(t *testing.T) {
 }
 
 // Degraded cache propagates immediately — a stale cache must not silently
-// fall through to the EU-level query (fail closed, CLAUDE.md rule 7).
+// fall through to the EU-level query (fail closed).
 func TestResolveCacheExpiredPropagates(t *testing.T) {
 	ca := newTestCA(t, "LV PID IACA C", "LV")
 	leafDER, _ := ca.issueLeaf(t, "LV PID DS 3", "LV")
@@ -351,7 +351,7 @@ func TestResolveUnknownType(t *testing.T) {
 }
 
 // FuzzResolveIssuerKey: the chain comes from the wallet (x5chain/x5c) —
-// untrusted input, must not panic (hard rule 5).
+// untrusted input, must not panic.
 func FuzzResolveIssuerKey(f *testing.F) {
 	ca, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {

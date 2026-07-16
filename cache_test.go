@@ -110,7 +110,7 @@ func freshStub(t *testing.T, clock *fakeClock) *stubClient {
 	}}
 }
 
-// Clock-driven ladder (T-06.3 acceptance): fresh→serve; stale-within-grace→
+// Clock-driven ladder: fresh→serve; stale-within-grace→
 // serve+flag; stale-beyond→ErrCacheExpired. Negative rungs must fail first.
 func TestCacheFreshnessLadder(t *testing.T) {
 	clock := newClock(t0)
@@ -193,8 +193,8 @@ func TestCacheRevalidation304(t *testing.T) {
 	}
 }
 
-// Withdrawal via snapshot replacement (WP-06 Decisions / trust-anchor D9 —
-// NOT a changes feed): the v2 fixture drops "LV PID Provider CA 2"; after
+// Withdrawal via snapshot replacement (NOT a changes feed): the v2 fixture
+// drops "LV PID Provider CA 2"; after
 // the ETag changes, the withdrawn anchor is unusable on the next call.
 func TestCacheWithdrawalViaSnapshotReplacement(t *testing.T) {
 	srv, h := newFixtureServer(t, "anchors-pid-lv-v1.json")
@@ -247,7 +247,7 @@ func fingerprintOf(c *x509.Certificate) string {
 }
 
 // X-Trust-Stale (upstream degraded): never Fresh; only the grace window
-// applies; grace 0 ⇒ fail closed immediately (docs/trust-service-api.md §4).
+// applies; grace 0 ⇒ fail closed immediately (per the trust-service API contract).
 func TestCacheUpstreamStale(t *testing.T) {
 	t.Run("within_grace_served_flagged", func(t *testing.T) {
 		clock := newClock(t0)
@@ -311,7 +311,7 @@ func TestCacheRefreshErrorCarryOver(t *testing.T) {
 	}
 }
 
-// Per-anchor valid_until honored at serve time (ARF §6.6.3.2: an expired
+// Per-anchor valid_until honored at serve time ([ARF §6.6.3.2]: an expired
 // trust anchor must not validate anything).
 func TestCachePerAnchorValidUntil(t *testing.T) {
 	clock := newClock(t0)
@@ -341,7 +341,7 @@ func TestCachePerAnchorValidUntil(t *testing.T) {
 
 // Country filter: exact fold match; country=="" selects EU-level anchors
 // only (territory "EU" or empty/overlay) — cross-country anchors are never
-// mixed into a national query (feeds T-06.4 acceptance).
+// mixed into a national query.
 func TestCacheCountryFilter(t *testing.T) {
 	clock := newClock(t0)
 	valid := t0.Add(24 * time.Hour)

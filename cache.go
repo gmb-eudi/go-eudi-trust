@@ -9,19 +9,18 @@ import (
 	"time"
 )
 
-// AnchorSource is what the verification pipeline consumes (WP-06 README
-// target interface — binding): anchors served from memory, fed by
+// AnchorSource is what the verification pipeline consumes: anchors served from memory, fed by
 // trust-cache-worker via Refresh. Implemented by CachingSource.
 type AnchorSource interface {
 	// AnchorsFor returns the usable anchors of one type for one country
 	// ("" = EU-level lists only). ErrCacheExpired when the cache is stale
-	// beyond grace or never filled (fail closed, CLAUDE.md rule 7).
+	// beyond grace or never filled (fail closed).
 	AnchorsFor(t AnchorType, country string) ([]Anchor, error)
 }
 
 // CacheConfig configures a CachingSource. The refresh LOOP lives in the
 // consuming service (trust-cache-worker) — this library runs no goroutines
-// or timers (ADR-0004); it only exposes the Refresh hook.
+// or timers; it only exposes the Refresh hook.
 type CacheConfig struct {
 	// Types to maintain. Required, non-empty, all valid taxonomy values.
 	Types []AnchorType
@@ -35,7 +34,7 @@ type CacheConfig struct {
 	// Clock is the injected time source. Defaults to time.Now().UTC.
 	Clock func() time.Time
 	// OnStateChange is invoked synchronously on every per-type state
-	// transition (edge-triggered; T-06.6). Optional. See StateCallback.
+	// transition (edge-triggered). Optional. See StateCallback.
 	OnStateChange StateCallback
 }
 
@@ -47,8 +46,7 @@ type cacheEntry struct {
 }
 
 // CachingSource is the in-memory AnchorSource fed by Refresh. Safe for
-// concurrent use. The ONLY path from the trust service to the pipeline
-// (CLAUDE.md rule 6).
+// concurrent use. The ONLY path from the trust service to the pipeline.
 type CachingSource struct {
 	client  Client
 	cfg     CacheConfig
@@ -85,21 +83,21 @@ func NewCachingSource(client Client, cfg CacheConfig) (*CachingSource, error) {
 	return &CachingSource{client: client, cfg: cfg, entries: entries}, nil
 }
 
-// Now exposes the injected clock. ResolveIssuerKey (T-06.4) uses it for
-// RFC 5280 §6.1 time checks so the whole trust path shares one time source.
+// Now exposes the injected clock. ResolveIssuerKey uses it for
+// [RFC 5280 §6.1] time checks so the whole trust path shares one time source.
 func (s *CachingSource) Now() time.Time { return s.cfg.Clock() }
 
 // Refresh fetches every configured type once with If-None-Match
 // revalidation — the hook the trust-cache-worker loop calls.
 //
-// docs/trust-service-api.md §4 / trust-anchor D9 (ETag polling, no changes
+// Trust-service API contract (ETag polling, no changes
 // cursor): a 304 confirms the cached snapshot is still current (FetchedAt
 // renewed); a 200 with a new ETag carries the COMPLETE new set which fully
 // REPLACES the cached one — anchor withdrawal arrives exactly this way and
-// the withdrawn anchor is unusable on the next AnchorsFor (WP-06 Decisions).
+// the withdrawn anchor is unusable on the next AnchorsFor.
 // Fetch errors keep the previous set (carry-over) and are returned joined;
-// the entry keeps aging toward fail-closed expiry (CLAUDE.md rule 7).
-// State transitions observed here fire the OnStateChange callback (T-06.6).
+// the entry keeps aging toward fail-closed expiry.
+// State transitions observed here fire the OnStateChange callback.
 func (s *CachingSource) Refresh(ctx context.Context) error {
 	var errs []error
 	for _, t := range s.cfg.Types {
@@ -181,7 +179,7 @@ func (s *CachingSource) fire(changes ...*StateChange) {
 // ⇒ ErrCacheExpired (services map to err:trust:anchor-unavailable);
 // StateStale serves with the flag observable via Status/StateCallback.
 // Per-anchor validity: anchors past ValidUntil are never served
-// (ARF §6.6.3.2: an expired trust anchor must not validate anything).
+// ([ARF §6.6.3.2]: an expired trust anchor must not validate anything).
 func (s *CachingSource) AnchorsFor(t AnchorType, country string) ([]Anchor, error) {
 	s.mu.Lock()
 	e, ok := s.entries[t]
@@ -213,7 +211,7 @@ func (s *CachingSource) AnchorsFor(t AnchorType, country string) ([]Anchor, erro
 
 // matchesCountry: country=="" selects EU-level anchors only (territory "EU"
 // or empty = manual overlay); cross-country anchors are honored only via
-// the EU-level query (WP-06 T-06.4 acceptance). Codes compare case-folded.
+// the EU-level query. Codes compare case-folded.
 func matchesCountry(anchorCountry, query string) bool {
 	if query == "" {
 		return anchorCountry == "" || strings.EqualFold(anchorCountry, "EU")
@@ -222,7 +220,7 @@ func matchesCountry(anchorCountry, query string) bool {
 }
 
 // Status reports the serve-time status of one type (health + provenance).
-// Observing a transition here fires the callback (T-06.6).
+// Observing a transition here fires the callback.
 func (s *CachingSource) Status(t AnchorType) SourceStatus {
 	s.mu.Lock()
 	e, ok := s.entries[t]
@@ -245,7 +243,7 @@ func (s *CachingSource) Status(t AnchorType) SourceStatus {
 }
 
 // States reports every configured type in config order — one call for a
-// consumer /health endpoint (WP-06 T-06.6: staleness state for /health of
+// consumer /health endpoint (staleness state for /health of
 // consumers). Observed transitions fire the callback.
 func (s *CachingSource) States() []SourceStatus {
 	s.mu.Lock()

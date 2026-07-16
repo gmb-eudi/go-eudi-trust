@@ -79,7 +79,7 @@ func run() error {
 			Anchors: []wire.Anchor{pid1, pid2},
 		},
 		// v2: CA 2 withdrawn — snapshot replacement (changed ETag) carries
-		// the complete new set (WP-06 Decisions; trust-anchor D9).
+		// the complete new set.
 		"anchors-pid-lv-v2.json": wire.AnchorsResponse{
 			Snapshot: snapV2, GeneratedAt: generatedAt.Add(6 * time.Hour), Stale: false,
 			Anchors: []wire.Anchor{pid1},
@@ -102,7 +102,7 @@ func run() error {
 	}
 
 	// Contract-violation fixture: a valid anchor with notAfter (valid_until)
-	// removed — T-06.2 acceptance: missing valid_until = error.
+	// removed — missing valid_until = error.
 	b, err := json.Marshal(wire.AnchorsResponse{
 		Snapshot: snapV1, GeneratedAt: generatedAt, Anchors: []wire.Anchor{pid1},
 	})
