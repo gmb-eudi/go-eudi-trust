@@ -1,0 +1,22 @@
+{
+  "anchors": [
+    {
+      "certDer": "MIIBzTCCAXOgAwIBAgIBATAKBggqhkjOPQQDAjBOMQswCQYDVQQGEwJMVjEgMB4GA1UEChMXV1AtMDYgc3ludGhldGljIGZpeHR1cmUxHTAbBgNVBAMTFExWIFBJRCBQcm92aWRlciBDQSAxMB4XDTI2MDEwMTAwMDAwMFoXDTM2MDEwMTAwMDAwMFowTjELMAkGA1UEBhMCTFYxIDAeBgNVBAoTF1dQLTA2IHN5bnRoZXRpYyBmaXh0dXJlMR0wGwYDVQQDExRMViBQSUQgUHJvdmlkZXIgQ0EgMTBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABDPFjuTvUA17afBartdc/wf2TPKCQPNOdG7pvY7L9vXF13wIR4wQbTWLcRjfbL67zr2cNZsPw1tSSH6CfYLxaiijQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBS1J4P4uNFVsxbPO02InttW/Wb1EjAKBggqhkjOPQQDAgNIADBFAiAD1laydHzd357piS5M08LCdZopw6leo+5cIXUtX1WTCgIhAI8OGMdLvV/eJVnQRk4OHAObUlXYGJIP/4QEgdetIQEx",
+      "fingerprintSha256": "f45f4a094e455eb37867542ac8fae50230e0c16c39528fd66cbba45d85b19100",
+      "notBefore": "2026-01-01T00:00:00Z",
+      "qcWithQscd": false,
+      "serviceName": "PID Provider CA",
+      "serviceType": "http://uri.etsi.org/TrstSvc/Svctype/EUDI/PIDProvider",
+      "source": "tl",
+      "status": "http://uri.etsi.org/TrstSvc/TrustedList/Svcstatus/granted",
+      "statusStartingTime": "2026-01-01T00:00:00Z",
+      "subject": "CN=LV PID Provider CA 1,O=WP-06 synthetic fixture,C=LV",
+      "territory": "LV",
+      "tlSequence": 42,
+      "tspName": "Latvia PID Provider"
+    }
+  ],
+  "generatedAt": "2026-07-01T06:00:00Z",
+  "snapshot": "3f7a1c9e5b2d8f4a6c0e2b7d9f1a3c5e7b9d1f3a5c7e9b1d3f5a7c9e1b3d5f7a",
+  "stale": false
+}

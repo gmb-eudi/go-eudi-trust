@@ -1,0 +1,8 @@
+version: "2"
+linters:
+  enable:
+    - errcheck
+    - gosec
+    - staticcheck
+    - revive
+    - exhaustive

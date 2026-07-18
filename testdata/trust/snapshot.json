@@ -1,0 +1,43 @@
+{
+  "id": "3f7a1c9e5b2d8f4a6c0e2b7d9f1a3c5e7b9d1f3a5c7e9b1d3f5a7c9e1b3d5f7a",
+  "generatedAt": "2026-07-01T06:00:00Z",
+  "lotlSequence": 351,
+  "lotlIssueTime": "2026-06-25T00:00:00Z",
+  "lotlNextUpdate": "2026-12-25T00:00:00Z",
+  "lotlPivotSeq": 349,
+  "advertisedOj": "C/2026/1944",
+  "territories": [
+    {
+      "code": "LV",
+      "tlSequence": 42,
+      "issueTime": "2026-06-20T00:00:00Z",
+      "nextUpdate": "2026-12-20T00:00:00Z",
+      "stale": false,
+      "anchorCount": 2
+    },
+    {
+      "code": "EE",
+      "tlSequence": 97,
+      "issueTime": "2026-05-01T00:00:00Z",
+      "nextUpdate": "2026-06-30T00:00:00Z",
+      "stale": true,
+      "carriedOver": true,
+      "carriedOverReason": "fetch failed: upstream timeout",
+      "anchorCount": 5
+    }
+  ],
+  "overlayCount": 1,
+  "pendingBootstrap": {
+    "ojReference": "C/2026/1944",
+    "detectedAt": "2026-06-28T09:00:00Z",
+    "subjects": ["CN=EC LOTL Signer 5"],
+    "fingerprints": ["c4a6e8f0b2d4c6e8f0a2b4d6e8f0a2c4b6d8e0f2a4c6b8d0e2f4a6c8b0d2e4f6"],
+    "added": ["c4a6e8f0b2d4c6e8f0a2b4d6e8f0a2c4b6d8e0f2a4c6b8d0e2f4a6c8b0d2e4f6"]
+  },
+  "bootstrap": {
+    "version": 3,
+    "ojReference": "C/2025/1234",
+    "activatedAt": "2026-01-10T08:00:00Z",
+    "fingerprints": ["d5b7f9a1c3e5d7f9b1a3c5e7d9f1b3a5c7e9d1f3b5a7c9e1d3f5b7a9c1e3d5f7"]
+  }
+}
