@@ -5,8 +5,8 @@ github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 h1:5RVFMOWjMyRy8cARdy79nAmgYw3h
 github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1/go.mod h1:ZXNYxsqcloTdSy/rNShjYzMhyjf0LaoftYK0p+A3h40=
 github.com/fxamacker/cbor/v2 v2.9.2 h1:X4Ksno9+x3cz0TZv69ec1hxP/+tymuR8PXQJyDwfh78=
 github.com/fxamacker/cbor/v2 v2.9.2/go.mod h1:vM4b+DJCtHn+zz7h3FFp/hDAI9WNWCsZj23V5ytsSxQ=
-github.com/gmb-eudi/go-eudi-crypto v0.0.3 h1:wM8R/4OJzfPhmhe5YZ02EztXSKRxzmXekj9Y2khCyWs=
-github.com/gmb-eudi/go-eudi-crypto v0.0.3/go.mod h1:NEWUdLUdU8ftBCt1uBSRr+tMFoieP8CRfaC+sX1HEL0=
+github.com/gmb-eudi/go-eudi-crypto v0.0.4 h1:5nkd15XD+FBj2fRCpFkEwzF8Xfe37vdww/V+ZkI3M/Q=
+github.com/gmb-eudi/go-eudi-crypto v0.0.4/go.mod h1:vi7Q/eFXPOyOU6kVCq2vcCbZ3ZHC5etGvnI5XrBt254=
 github.com/goccy/go-json v0.10.6 h1:p8HrPJzOakx/mn/bQtjgNjdTcN+/S6FcG2CTtQOrHVU=
 github.com/goccy/go-json v0.10.6/go.mod h1:oq7eo15ShAhp70Anwd5lgX2pLfOS3QCiwU/PULtXL6M=
 github.com/lestrrat-go/blackmagic v1.0.4 h1:IwQibdnf8l2KoO+qC3uT4OaTWsW7tuRQXy9TRN9QanA=
