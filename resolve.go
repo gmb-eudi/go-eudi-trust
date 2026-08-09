@@ -17,8 +17,15 @@ import (
 // (territory resolution order recorded verbatim). It carries
 // subjects, fingerprints and territory codes only — never key material or
 // attribute values.
+//
+// The two subject fields are distinguished-name strings in the form of
+// [RFC 4514] (which obsoleted RFC 2253), rendered by the standard library,
+// which follows that syntax approximately rather than exactly. They are
+// provenance for a human reading the report: anchor matching is done on the
+// certificates themselves and on the SHA-256 fingerprint, never on these
+// strings, so the approximation cannot affect a trust decision.
 type ResolvedIssuer struct {
-	Subject           string     // leaf certificate subject (RFC 2253 string)
+	Subject           string     // leaf certificate subject
 	AnchorSubject     string     // matched anchor certificate subject
 	AnchorFingerprint string     // SHA-256 hex of the matched anchor cert
 	AnchorType        AnchorType // the type the caller demanded
