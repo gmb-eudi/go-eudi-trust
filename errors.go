@@ -29,4 +29,11 @@ var (
 	// ErrChainUntrusted: the chain does not terminate at any anchor of the
 	// requested type in the resolution territories.
 	ErrChainUntrusted = errors.New("trust: issuer chain does not reach a trust anchor")
+	// ErrChainOutOfValidity: a certificate in the chain is outside its own
+	// validity window at the validation time the caller supplied. Kept
+	// distinct from ErrChainUntrusted deliberately: the remedy is the issuer's
+	// certificate rotation, or the caller's choice of validation time — not a
+	// missing trust anchor. Services map it to
+	// err:credential:issuer-cert-expired.
+	ErrChainOutOfValidity = errors.New("trust: certificate outside its validity window at the validation time")
 )

@@ -156,7 +156,7 @@ func TestResolveHappyPathIssuingTerritory(t *testing.T) {
 	leafDER, leafKey := ca.issueLeaf(t, "LV PID DS", "LV")
 	src := sourceWith(trust.PIDProvider, "LV", ca)
 
-	pub, ri, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.PIDProvider)
+	pub, ri, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.PIDProvider, trust.Now(src))
 	if err != nil {
 		t.Fatalf("ResolveIssuerKey: %v", err)
 	}
@@ -203,7 +203,7 @@ func TestResolveWithIntermediate(t *testing.T) {
 	leafDER, _ := sub.issueLeaf(t, "LV PID DS 2", "LV")
 	src := sourceWith(trust.PIDProvider, "LV", root)
 
-	_, ri, err := trust.ResolveIssuerKey(src, [][]byte{leafDER, sub.cert.Raw}, trust.PIDProvider)
+	_, ri, err := trust.ResolveIssuerKey(src, [][]byte{leafDER, sub.cert.Raw}, trust.PIDProvider, trust.Now(src))
 	if err != nil {
 		t.Fatalf("ResolveIssuerKey with intermediate: %v", err)
 	}
@@ -219,7 +219,7 @@ func TestResolveWrongAnchorTypeFails(t *testing.T) {
 	leafDER, _ := ca.issueLeaf(t, "LV Wallet Unit", "LV")
 	src := sourceWith(trust.WalletProvider, "LV", ca) // only wallet_provider
 
-	_, _, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.PIDProvider)
+	_, _, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.PIDProvider, trust.Now(src))
 	if !errors.Is(err, trust.ErrChainUntrusted) {
 		t.Fatalf("err = %v, want ErrChainUntrusted", err)
 	}
@@ -236,7 +236,7 @@ func TestResolveEULevelFallback(t *testing.T) {
 		Status: statusGranted, ValidUntil: ca.cert.NotAfter, TLSequence: 7,
 	}}
 
-	_, ri, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.AccessCA)
+	_, ri, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.AccessCA, trust.Now(src))
 	if err != nil {
 		t.Fatalf("ResolveIssuerKey: %v", err)
 	}
@@ -258,7 +258,7 @@ func TestResolveCrossCountryNotHonored(t *testing.T) {
 	leafDER, _ := ca.issueLeaf(t, "DE PID DS", "DE")
 	src := sourceWith(trust.PIDProvider, "LV", ca) // filed under LV only
 
-	_, _, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.PIDProvider)
+	_, _, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.PIDProvider, trust.Now(src))
 	if !errors.Is(err, trust.ErrChainUntrusted) {
 		t.Fatalf("err = %v, want ErrChainUntrusted", err)
 	}
@@ -275,7 +275,7 @@ func TestResolveCacheExpiredPropagates(t *testing.T) {
 	src := sourceWith(trust.PIDProvider, "LV", ca)
 	src.err = trust.ErrCacheExpired
 
-	_, _, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.PIDProvider)
+	_, _, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.PIDProvider, trust.Now(src))
 	if !errors.Is(err, trust.ErrCacheExpired) {
 		t.Fatalf("err = %v, want ErrCacheExpired", err)
 	}
@@ -284,17 +284,20 @@ func TestResolveCacheExpiredPropagates(t *testing.T) {
 	}
 }
 
-// The injected clock (Now on the source) governs RFC 5280 time checks: at
-// now beyond the anchor's NotAfter, the chain must fail.
+// The injected clock (Now on the source) is what a caller asking "valid now"
+// passes as the validation time: with now beyond the anchor's NotAfter, the
+// chain must fail — and fail as out-of-window, not as unreachable. This
+// assertion previously demanded ErrChainUntrusted, which is exactly the
+// conflation that made a plain expiry look like an unknown issuer.
 func TestResolveClockFromSource(t *testing.T) {
 	ca := newTestCA(t, "LV PID IACA D", "LV")
 	leafDER, _ := ca.issueLeaf(t, "LV PID DS 4", "LV")
 	src := sourceWith(trust.PIDProvider, "LV", ca)
 	src.now = t0.Add(2 * 365 * 24 * time.Hour) // beyond CA NotAfter
 
-	_, _, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.PIDProvider)
-	if !errors.Is(err, trust.ErrChainUntrusted) {
-		t.Fatalf("err = %v, want ErrChainUntrusted (expired at injected now)", err)
+	_, _, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.PIDProvider, trust.Now(src))
+	if !errors.Is(err, trust.ErrChainOutOfValidity) {
+		t.Fatalf("err = %v, want ErrChainOutOfValidity (out of window at injected now)", err)
 	}
 }
 
@@ -304,7 +307,7 @@ func TestResolveLeafWithoutCountry(t *testing.T) {
 	leafDER, _ := ca.issueLeaf(t, "No Country DS", "")
 	src := sourceWith(trust.PIDProvider, "", ca)
 
-	_, ri, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.PIDProvider)
+	_, ri, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.PIDProvider, trust.Now(src))
 	if err != nil {
 		t.Fatalf("ResolveIssuerKey: %v", err)
 	}
@@ -327,7 +330,7 @@ func TestResolveMalformedChain(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, _, err := trust.ResolveIssuerKey(src, tt.chain, trust.PIDProvider)
+			_, _, err := trust.ResolveIssuerKey(src, tt.chain, trust.PIDProvider, trust.Now(src))
 			if !errors.Is(err, trust.ErrChainParse) {
 				t.Fatalf("err = %v, want ErrChainParse", err)
 			}
@@ -344,7 +347,7 @@ func validLeafDER(t *testing.T) []byte {
 
 func TestResolveUnknownType(t *testing.T) {
 	src := &stubSource{anchors: map[string][]trust.Anchor{}, now: t0}
-	_, _, err := trust.ResolveIssuerKey(src, [][]byte{validLeafDER(t)}, trust.AnchorType("bogus"))
+	_, _, err := trust.ResolveIssuerKey(src, [][]byte{validLeafDER(t)}, trust.AnchorType("bogus"), trust.Now(src))
 	if !errors.Is(err, trust.ErrUnknownAnchorType) {
 		t.Fatalf("err = %v, want ErrUnknownAnchorType", err)
 	}
@@ -374,7 +377,90 @@ func FuzzResolveIssuerKey(f *testing.F) {
 	f.Add([]byte(""))
 	src := &stubSource{anchors: map[string][]trust.Anchor{}, now: time.Date(2026, 7, 4, 12, 0, 0, 0, time.UTC)}
 	f.Fuzz(func(_ *testing.T, data []byte) {
-		_, _, _ = trust.ResolveIssuerKey(src, [][]byte{data}, trust.PIDProvider)       // must not panic
-		_, _, _ = trust.ResolveIssuerKey(src, [][]byte{data, data}, trust.PIDProvider) // with "intermediate"
+		_, _, _ = trust.ResolveIssuerKey(src, [][]byte{data}, trust.PIDProvider, trust.Now(src))       // must not panic
+		_, _, _ = trust.ResolveIssuerKey(src, [][]byte{data, data}, trust.PIDProvider, trust.Now(src)) // with "intermediate"
 	})
+}
+
+// issueLeafWindow issues an end-entity certificate with an explicit validity
+// window, for the cases where the window itself is what is under test.
+func (ca *testCA) issueLeafWindow(t *testing.T, cn, country string, notBefore, notAfter time.Time) ([]byte, *ecdsa.PrivateKey) {
+	t.Helper()
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tmpl := &x509.Certificate{
+		SerialNumber: nextSerial(),
+		Subject:      pkix.Name{CommonName: cn},
+		NotBefore:    notBefore,
+		NotAfter:     notAfter,
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+	}
+	if country != "" {
+		tmpl.Subject.Country = []string{country}
+	}
+	der, err := x509.CreateCertificate(rand.Reader, tmpl, ca.cert, &key.PublicKey, ca.key)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return der, key
+}
+
+// Document signers are short-lived and rotate, while the credentials they
+// signed stay in wallets much longer. So the caller — not this library — must
+// decide which instant the path is judged at: the credential's signing time
+// answers "was this issuer trusted when it signed", the current time answers
+// "is it trusted now". Both are legitimate; only the caller knows which.
+func TestResolveIssuerKeyValidatesAtTheCallersTime(t *testing.T) {
+	ca := newTestCA(t, "LV PID IACA", "LV")
+	signedAt := t0.Add(-200 * 24 * time.Hour)
+	// A signer that was valid when it signed and has since expired.
+	leafDER, leafKey := ca.issueLeafWindow(t, "LV PID DS", "LV",
+		signedAt.Add(-24*time.Hour), signedAt.Add(24*time.Hour))
+	src := sourceWith(trust.PIDProvider, "LV", ca)
+
+	pub, _, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.PIDProvider, signedAt)
+	if err != nil {
+		t.Fatalf("at the signing time the path must validate: %v", err)
+	}
+	ecPub, ok := pub.(*ecdsa.PublicKey)
+	if !ok || !ecPub.Equal(&leafKey.PublicKey) {
+		t.Fatalf("returned key is not the leaf public key (%T)", pub)
+	}
+
+	// The same chain judged at the current time is out of window.
+	if _, _, err := trust.ResolveIssuerKey(src, [][]byte{leafDER}, trust.PIDProvider, trust.Now(src)); err == nil {
+		t.Fatal("at the current time the expired signer must NOT resolve")
+	}
+}
+
+// An expired certificate and a chain that reaches no anchor are different
+// answers: one is the issuer's rotation, the other is a trust problem. They
+// were the same error until now, which is why a plain expiry was read as an
+// unknown issuer and a certificate was sent to be declared as trusted.
+func TestResolveIssuerKeyOutOfWindowIsNotUntrusted(t *testing.T) {
+	ca := newTestCA(t, "LV PID IACA", "LV")
+	expiredDER, _ := ca.issueLeafWindow(t, "LV PID DS", "LV",
+		t0.Add(-400*24*time.Hour), t0.Add(-200*24*time.Hour))
+	src := sourceWith(trust.PIDProvider, "LV", ca)
+
+	_, _, err := trust.ResolveIssuerKey(src, [][]byte{expiredDER}, trust.PIDProvider, trust.Now(src))
+	if !errors.Is(err, trust.ErrChainOutOfValidity) {
+		t.Fatalf("expired signer: want ErrChainOutOfValidity, got %v", err)
+	}
+	if errors.Is(err, trust.ErrChainUntrusted) {
+		t.Fatal("expired signer must not also report as untrusted — that is the confusion being removed")
+	}
+
+	// The other side: a chain to an anchor this source does not hold.
+	foreign := newTestCA(t, "Other IACA", "LV")
+	foreignDER, _ := foreign.issueLeaf(t, "Other DS", "LV")
+	_, _, err = trust.ResolveIssuerKey(src, [][]byte{foreignDER}, trust.PIDProvider, trust.Now(src))
+	if !errors.Is(err, trust.ErrChainUntrusted) {
+		t.Fatalf("unknown anchor: want ErrChainUntrusted, got %v", err)
+	}
+	if errors.Is(err, trust.ErrChainOutOfValidity) {
+		t.Fatal("unknown anchor must not report as out-of-window")
+	}
 }
