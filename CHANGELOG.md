@@ -42,7 +42,7 @@ for whoever bumps the dependency.
 
 ### Notes
 
-- No new version of go-eudi-crypto is required: the out-of-window classification inspects
-  the certificates directly rather than depending on another library's error wrapping.
+- Dependency update
+
 - Path validation itself is unchanged — explicit anchors only, no system pool, and every
   certificate window is still asserted at the time you pass.
