@@ -15,7 +15,14 @@ issuer-chain resolution against typed anchor sets.
 - `ResolveIssuerKey`: resolves an mdoc x5chain / SD-JWT x5c to a verified
   issuer key against anchors of the required type — issuing territory
   first, then EU-level — via go-eudi-crypto RFC 5280 path validation
-  (explicit anchors only, no system pool).
+  (explicit anchors only, no system pool). The **validation time is the
+  caller's argument**, not this library's clock: a document signer is
+  short-lived while the credentials it signed stay in wallets much longer, so
+  only the caller knows whether the question is "was this issuer trusted when it
+  signed" (pass the signing time) or "is it trusted now" (pass `Now(src)`). A
+  certificate outside its own window at that time fails with
+  `ErrChainOutOfValidity`, kept distinct from `ErrChainUntrusted` so an expiry is
+  never reported as an unknown anchor.
 - `MatchCertificate`: ETSI TS 119 615 verdict passthrough (server-side
   check, optional extension) with a short-TTL verdict cache.
 

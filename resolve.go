@@ -40,7 +40,12 @@ type ResolvedIssuer struct {
 // provide Now (inject clocks into validity checks).
 type clocked interface{ Now() time.Time }
 
-func sourceNow(src AnchorSource) time.Time {
+// Now is the source's current time. Pass it as ResolveIssuerKey's validation
+// time when the answer required is "the certificates must be valid now"; a
+// caller validating a credential at the time it was signed passes that time
+// instead. Exported so the choice is visible at the call site rather than
+// defaulted inside this library.
+func Now(src AnchorSource) time.Time {
 	if c, ok := src.(clocked); ok {
 		return c.Now()
 	}
@@ -64,9 +69,12 @@ func sourceNow(src AnchorSource) time.Time {
 // first, then EU-level ("") — recorded verbatim in TerritoriesTried. A
 // source error (e.g. ErrCacheExpired) aborts immediately: a degraded cache
 // must not silently fall through to the next territory.
-func ResolveIssuerKey(src AnchorSource, chain [][]byte, t AnchorType) (stdcrypto.PublicKey, ResolvedIssuer, error) {
+func ResolveIssuerKey(src AnchorSource, chain [][]byte, t AnchorType, at time.Time) (stdcrypto.PublicKey, ResolvedIssuer, error) {
 	if !ValidAnchorType(t) {
 		return nil, ResolvedIssuer{}, fmt.Errorf("%w: %q", ErrUnknownAnchorType, t)
+	}
+	if at.IsZero() {
+		return nil, ResolvedIssuer{}, fmt.Errorf("%w: validation time is required", ErrChainParse)
 	}
 	if len(chain) == 0 {
 		return nil, ResolvedIssuer{}, fmt.Errorf("%w: empty chain", ErrChainParse)
@@ -80,7 +88,6 @@ func ResolveIssuerKey(src AnchorSource, chain [][]byte, t AnchorType) (stdcrypto
 		certs = append(certs, c)
 	}
 	leaf, intermediates := certs[0], certs[1:]
-	now := sourceNow(src)
 
 	territories := territoryOrder(leaf)
 	resolved := ResolvedIssuer{
@@ -88,6 +95,7 @@ func ResolveIssuerKey(src AnchorSource, chain [][]byte, t AnchorType) (stdcrypto
 		AnchorType:       t,
 		TerritoriesTried: territories,
 	}
+	var outOfWindow error // first validity-window failure seen, if any
 	for _, terr := range territories {
 		// AnchorsFor(t, terr) is trusted to have already scoped its result to
 		// type t: the cache is keyed by AnchorType and the only writer is
@@ -108,9 +116,22 @@ func ResolveIssuerKey(src AnchorSource, chain [][]byte, t AnchorType) (stdcrypto
 		}
 		chains, err := eudicrypto.VerifyChain(leaf, intermediates, eudicrypto.ChainOptions{
 			Anchors: anchorCerts,
-			At:      now, // [RFC 5280 §6.1] time from the source's injected clock
+			At:      at, // [RFC 5280 §6.1] validation time — the caller's choice
 		})
 		if err != nil {
+			if outOfWindow == nil {
+				// Ask the certificates directly rather than reading the path
+				// builder's error text: the answer is observable here, and it
+				// keeps this classification independent of another library's
+				// error-wrapping choices.
+				if c := firstOutsideWindow(append(certs, anchorCerts...), at); c != nil {
+					outOfWindow = fmt.Errorf("%s: window [%s, %s], validation time %s",
+						c.Subject.String(),
+						c.NotBefore.UTC().Format(time.RFC3339),
+						c.NotAfter.UTC().Format(time.RFC3339),
+						at.UTC().Format(time.RFC3339))
+				}
+			}
 			continue // not trusted in this territory — try the next in order
 		}
 		root := chains[0][len(chains[0])-1]
@@ -127,7 +148,34 @@ func ResolveIssuerKey(src AnchorSource, chain [][]byte, t AnchorType) (stdcrypto
 		// else is unreachable — fail closed regardless.
 		return nil, ResolvedIssuer{}, fmt.Errorf("%w: verified root not in anchor set", ErrChainUntrusted)
 	}
+	if outOfWindow != nil {
+		// A certificate involved in the decision was outside its own window at
+		// the validation time. Reporting this as "no anchor" is what sent an
+		// external tester hunting for a trust problem that did not exist.
+		return nil, ResolvedIssuer{}, fmt.Errorf("%w: %w", ErrChainOutOfValidity, outOfWindow)
+	}
 	return nil, ResolvedIssuer{}, fmt.Errorf("%w: no %s anchor matched in territories %v", ErrChainUntrusted, t, territories)
+}
+
+// firstOutsideWindow returns the first certificate that is outside its own
+// validity window at the validation time, or nil when every one of them is
+// within it. Used only after path validation has already failed, to say WHICH
+// kind of failure it was.
+//
+// One caveat, because it decides what a report says: a chain that is both out of
+// window and unreachable is reported as out of window. Both statements are true;
+// this is the one whose remedy differs (the issuer rotates a certificate) from
+// the trust-anchor answer an operator would otherwise go chasing.
+func firstOutsideWindow(certs []*x509.Certificate, at time.Time) *x509.Certificate {
+	for _, c := range certs {
+		if c == nil {
+			continue
+		}
+		if at.Before(c.NotBefore) || at.After(c.NotAfter) {
+			return c
+		}
+	}
+	return nil
 }
 
 // territoryOrder derives the resolution order from the certificate country
