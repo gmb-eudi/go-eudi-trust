@@ -13,16 +13,10 @@
 *.yaml text eol=lf
 
 # Dockerfile joins them for the same reason `*.sh` is here: a Linux tool reads it,
-# so the working copy should hold the bytes CI holds. Added 2026-08-21 after
-# flowbyte's Dockerfile was found entirely CRLF in a Windows working tree —
-# including a `\` line continuation.
-#
-# Be precise about what that was, because the first reading was wrong: git had
-# LF stored the whole time. The CRLF came from `core.autocrlf=true` handing out
-# CRLF on checkout to a repo that carried no .gitattributes. So CI and every
-# Linux checkout were always fine, and this line fixes a LOCAL divergence, not a
-# shipping defect — which is also the honest reason `*.go` and `*.sh` are pinned:
-# without it a Windows `gofmt`/`golangci-lint`/`docker build` sees different bytes
-# than the pipeline does, and reports findings that do not exist in CI.
+# so the working copy should hold the bytes CI runs on. On Windows with
+# core.autocrlf=true, a repo without this file is checked out CRLF while git stores
+# LF — CI is unaffected, but a local gofmt, linter or docker build then sees
+# different bytes than the pipeline and reports findings that do not exist there.
+# A CRLF line continuation in a Dockerfile is the same hazard a CRLF shell script is.
 Dockerfile   text eol=lf
 Dockerfile.* text eol=lf
