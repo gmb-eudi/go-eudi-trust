@@ -64,7 +64,7 @@ func (c *HTTPClient) MatchCertificate(ctx context.Context, certDER []byte) (Matc
 	req.Header.Set("Accept", "application/json")
 	resp, err := c.doer.Do(req)
 	if err != nil {
-		return MatchVerdict{}, fmt.Errorf("%w: %v", ErrUnavailable, err)
+		return MatchVerdict{}, fmt.Errorf("%w: %w", ErrUnavailable, err)
 	}
 	defer drainClose(resp)
 	if resp.StatusCode != http.StatusOK {
@@ -76,7 +76,7 @@ func (c *HTTPClient) MatchCertificate(ctx context.Context, certDER []byte) (Matc
 	}
 	dec, err := wire.DecodeMatch(raw)
 	if err != nil {
-		return MatchVerdict{}, fmt.Errorf("%w: %v", ErrSchema, err)
+		return MatchVerdict{}, fmt.Errorf("%w: %w", ErrSchema, err)
 	}
 	return MatchVerdict{
 		Verdict:   dec.Verdict,

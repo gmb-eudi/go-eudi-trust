@@ -86,7 +86,7 @@ func (c *HTTPClient) get(ctx context.Context, path string, query url.Values, eta
 	}
 	resp, err := c.doer.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
+		return nil, fmt.Errorf("%w: %w", ErrUnavailable, err)
 	}
 	return resp, nil
 }
@@ -94,7 +94,7 @@ func (c *HTTPClient) get(ctx context.Context, path string, query url.Values, eta
 func readBody(resp *http.Response) ([]byte, error) {
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxBodyBytes))
 	if err != nil {
-		return nil, fmt.Errorf("%w: reading body: %v", ErrUnavailable, err)
+		return nil, fmt.Errorf("%w: reading body: %w", ErrUnavailable, err)
 	}
 	return body, nil
 }
@@ -140,7 +140,7 @@ func (c *HTTPClient) Anchors(ctx context.Context, t AnchorType, territory, etag 
 	}
 	dec, err := wire.DecodeAnchors(body)
 	if err != nil {
-		return AnchorSet{}, false, fmt.Errorf("%w: %v", ErrSchema, err)
+		return AnchorSet{}, false, fmt.Errorf("%w: %w", ErrSchema, err)
 	}
 	// The strong ETag IS the snapshot id — divergence means a broken proxy
 	// or server; fail closed rather than record wrong provenance.
@@ -158,7 +158,7 @@ func (c *HTTPClient) Anchors(ctx context.Context, t AnchorType, territory, etag 
 		w := &dec.Anchors[i]
 		cert, err := w.Certificate()
 		if err != nil { // unreachable after DecodeAnchors; kept fail-closed
-			return AnchorSet{}, false, fmt.Errorf("%w: anchor %d: %v", ErrSchema, i, err)
+			return AnchorSet{}, false, fmt.Errorf("%w: anchor %d: %w", ErrSchema, i, err)
 		}
 		set.Anchors = append(set.Anchors, Anchor{
 			Cert:       cert,
@@ -190,7 +190,7 @@ func (c *HTTPClient) Snapshot(ctx context.Context) (SnapshotMeta, error) {
 	}
 	dec, err := wire.DecodeSnapshot(body)
 	if err != nil {
-		return SnapshotMeta{}, fmt.Errorf("%w: %v", ErrSchema, err)
+		return SnapshotMeta{}, fmt.Errorf("%w: %w", ErrSchema, err)
 	}
 	meta := SnapshotMeta{
 		ID:               dec.ID,

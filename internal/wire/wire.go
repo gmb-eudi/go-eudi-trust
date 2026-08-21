@@ -105,7 +105,7 @@ type MatchResponse struct {
 func DecodeAnchors(raw []byte) (*AnchorsResponse, error) {
 	var resp AnchorsResponse
 	if err := json.Unmarshal(raw, &resp); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalid, err)
+		return nil, fmt.Errorf("%w: %w", ErrInvalid, err)
 	}
 	if resp.Snapshot == "" {
 		return nil, fmt.Errorf("%w: missing snapshot id", ErrInvalid)
@@ -157,7 +157,7 @@ func (a *Anchor) Certificate() (*x509.Certificate, error) {
 func DecodeSnapshot(raw []byte) (*SnapshotResponse, error) {
 	var resp SnapshotResponse
 	if err := json.Unmarshal(raw, &resp); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalid, err)
+		return nil, fmt.Errorf("%w: %w", ErrInvalid, err)
 	}
 	if resp.ID == "" {
 		return nil, fmt.Errorf("%w: missing snapshot id", ErrInvalid)
@@ -174,7 +174,7 @@ func DecodeSnapshot(raw []byte) (*SnapshotResponse, error) {
 func DecodeMatch(raw []byte) (*MatchResponse, error) {
 	var resp MatchResponse
 	if err := json.Unmarshal(raw, &resp); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalid, err)
+		return nil, fmt.Errorf("%w: %w", ErrInvalid, err)
 	}
 	switch resp.Verdict {
 	case "PASSED", "FAILED", "WARNING":

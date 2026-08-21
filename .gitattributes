@@ -1,0 +1,28 @@
+# Go tooling always emits LF. If go.mod / go.sum get committed with CRLF (a
+# Windows-editor artifact), `go mod tidy` on a Linux CI runner rewrites them to
+# LF and the `go mod tidy -diff` gate sees the WHOLE FILE as changed → CI red,
+# even though the module content is correct. Pinning these file types to LF makes
+# the tidy-diff gate (and gofmt / the linters) stable across Windows/macOS/Linux
+# checkouts. This is preventive: it does not rewrite the working tree on its own —
+# run `git add --renormalize .` once after adding it if a repo already has CRLF.
+*.go   text eol=lf
+*.mod  text eol=lf
+*.sum  text eol=lf
+*.sh   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# Dockerfile joins them for the same reason `*.sh` is here: a Linux tool reads it,
+# so the working copy should hold the bytes CI holds. Added 2026-08-21 after
+# flowbyte's Dockerfile was found entirely CRLF in a Windows working tree —
+# including a `\` line continuation.
+#
+# Be precise about what that was, because the first reading was wrong: git had
+# LF stored the whole time. The CRLF came from `core.autocrlf=true` handing out
+# CRLF on checkout to a repo that carried no .gitattributes. So CI and every
+# Linux checkout were always fine, and this line fixes a LOCAL divergence, not a
+# shipping defect — which is also the honest reason `*.go` and `*.sh` are pinned:
+# without it a Windows `gofmt`/`golangci-lint`/`docker build` sees different bytes
+# than the pipeline does, and reports findings that do not exist in CI.
+Dockerfile   text eol=lf
+Dockerfile.* text eol=lf

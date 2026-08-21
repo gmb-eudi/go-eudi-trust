@@ -3,6 +3,44 @@
 Notable changes to this library, newest first. Versions are git tags; this file is written
 for whoever bumps the dependency.
 
+## v0.1.1
+
+Compatible: no signature changes, no message-text changes, nothing that passed before now
+fails.
+
+### Changed
+
+- **Errors now wrap their cause as well as their sentinel — 10 sites** in `client.go`,
+  `match.go` and `internal/wire`. Each was built as
+  `fmt.Errorf("%w: …: %v", ErrSentinel, err)`: the sentinel wrapped, the cause printed into
+  the string and then unreachable. Both are now `%w`.
+
+  Here the distinction the sentinels draw is *unavailable* versus *schema*, and the cause is
+  what tells you which flavour of unavailable you have — a timeout you should retry, or a
+  refused connection you should not:
+
+  ```go
+  if errors.Is(err, ErrUnavailable) {
+      var netErr net.Error
+      if errors.As(err, &netErr) && netErr.Timeout() { /* retry */ }
+  }
+  ```
+
+  `errors.Is(err, ErrUnavailable)` / `ErrSchema` / `ErrInvalid` still hold and every rendered
+  message is byte-identical (`%v` and `%w` print an error the same way), so no existing caller
+  needs to change.
+
+### Dependencies
+
+- `github.com/lestrrat-go/dsig` v1.3.0 → v1.4.0 (indirect).
+
+### Notes
+
+- The `go` directive is now `1.26.6`, which is the minimum Go version a consumer needs. The
+  previous `1.26` resolved to whatever patch the toolchain happened to have; the exact patch
+  is pinned because earlier 1.26 releases carry standard-library security fixes this library's
+  callers should not silently miss.
+
 ## v0.1.0
 
 ### Changed — BREAKING
