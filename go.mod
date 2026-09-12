@@ -1,6 +1,6 @@
 module github.com/gmb-eudi/go-eudi-trust
 
-go 1.26.6
+go 1.27.0
 
 require github.com/gmb-eudi/go-eudi-crypto v0.0.8
 

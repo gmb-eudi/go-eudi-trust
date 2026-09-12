@@ -3,6 +3,26 @@
 Notable changes to this library, newest first. Versions are git tags; this file is written
 for whoever bumps the dependency.
 
+## v0.1.3
+
+**Requires Go 1.27.0.** The `go` directive moves up from 1.26.6, so a consumer on an older
+toolchain will not build this version. Nothing else changed here — no source, no signature, no
+message text, and the dependency graph is untouched.
+
+### Changed
+
+- **`go` directive 1.26.6 → 1.27.0** — the minimum Go version a consumer needs. The services
+  in this project already required 1.27.0 while the libraries were the half still behind, so
+  they are brought up together and the whole codebase now asks for one toolchain.
+
+### Notes
+
+- The gate is green on the new directive: `go mod verify`, `go mod tidy -diff`, build, vet,
+  `gofmt`, and `go test -race` with **0 races** under a Go 1.27.0 toolchain. `govulncheck`
+  reports **0 vulnerabilities this library's code is affected by**. One advisory stands at
+  module level — **GO-2026-5932**, the unmaintained `golang.org/x/crypto/openpgp` package. It
+  has **no fixed version**, so no bump clears it, and nothing here imports it.
+
 ## v0.1.2
 
 Dependency maintenance. No source changed here and nothing this library does behaves differently.
