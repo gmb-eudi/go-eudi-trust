@@ -3,6 +3,24 @@
 Notable changes to this library, newest first. Versions are git tags; this file is written
 for whoever bumps the dependency.
 
+## v0.1.2
+
+Dependency maintenance. No source changed here and nothing this library does behaves differently.
+
+### Notes
+
+- **`github.com/gmb-eudi/go-eudi-crypto` → v0.0.8** (was v0.0.7). That release changed no source of
+  its own either — it took `github.com/lestrrat-go/jwx/v3` to **v3.3.0** and `golang.org/x/crypto`
+  to **v0.57.0**. Both reach this library only through it: **nothing here imports jwx**, it arrives
+  as an indirect requirement. The `x/crypto` move crosses the release that fixed **GO-2026-6354**
+  and **GO-2026-6355** upstream.
+
+- The gate is green on the new set: `go mod verify`, `go mod tidy -diff`, build, vet, `gofmt`, and
+  `go test -race` with **0 races**; `govulncheck` finds nothing.
+
+- Repository hygiene, with no effect on code that uses the library: CI now also runs on pushes to
+  `develop`, the pinned GitHub Actions moved to their current commits, the `setup-go` pin rolled forward, and a stray comment was dropped from `.gitattributes`.
+
 ## v0.1.1
 
 Compatible: no signature changes, no message-text changes, nothing that passed before now
