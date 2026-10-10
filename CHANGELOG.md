@@ -5,23 +5,28 @@ for whoever bumps the dependency.
 
 ## v0.1.3
 
-**Requires Go 1.27.0.** The `go` directive moves up from 1.26.6, so a consumer on an older
-toolchain will not build this version. Nothing else changed here — no source, no signature, no
-message text, and the dependency graph is untouched.
+**Requires Go 1.27.2.** The `go` directive moves up from 1.26.6, so a consumer on an older
+toolchain will not build this version. Go 1.27.2 is a security release, and under Go 1.27.0 this
+library's code reaches one standard-library vulnerability, GO-2026-6613, an HTTP/1 connection desynchronisation in `net/http`. No source, no signature and no message text changed.
 
 ### Changed
 
-- **`go` directive 1.26.6 → 1.27.0** — the minimum Go version a consumer needs. The services
-  in this project already required 1.27.0 while the libraries were the half still behind, so
-  they are brought up together and the whole codebase now asks for one toolchain.
+- **`go` directive 1.26.6 → 1.27.2**, the minimum Go version a consumer needs. Under 1.27.2
+  `govulncheck` finds no vulnerability this library calls. Raise your own module's `go` directive
+  to `1.27.2`; from there the go command downloads and uses that toolchain by itself.
+- **`go-eudi-crypto` → v0.0.9** (was v0.0.8), its own move to Go 1.27.2 with no code change.
 
 ### Notes
 
-- The gate is green on the new directive: `go mod verify`, `go mod tidy -diff`, build, vet,
-  `gofmt`, and `go test -race` with **0 races** under a Go 1.27.0 toolchain. `govulncheck`
-  reports **0 vulnerabilities this library's code is affected by**. One advisory stands at
-  module level — **GO-2026-5932**, the unmaintained `golang.org/x/crypto/openpgp` package. It
-  has **no fixed version**, so no bump clears it, and nothing here imports it.
+- **Indirect modules moved:** `fxamacker/cbor/v2` → v2.9.6, `goccy/go-json` → v0.11.2, `golang.org/x/crypto` → v0.58.0, `golang.org/x/sys` → v0.49.0.
+
+- The gate is green on Go 1.27.2: `go mod verify`, `go mod tidy -diff`, build, vet, `gofmt`,
+  golangci-lint v2.14.0, `go test -race` with **0 races**, and all four fuzz targets for 30 seconds
+  each with no failing input. `govulncheck` reports **no vulnerabilities found** at any level, the
+  module-level `golang.org/x/crypto/openpgp` advisory (GO-2026-5932) included.
+
+- Repository hygiene, with no effect on code that uses the library: CI's linter moved to
+  golangci-lint v2.14.0 (the earlier release cannot read Go 1.27.2's compiled standard library).
 
 ## v0.1.2
 
