@@ -3,6 +3,14 @@
 Notable changes to this library, newest first. Versions are git tags; this file is written
 for whoever bumps the dependency.
 
+## v0.1.4
+
+**Requires Go 1.27.4** (was 1.27.2), so a consumer on an older toolchain will not build this version. No source change: every exported symbol, signature and behaviour is as in v0.1.3.
+
+### Changed
+
+- `github.com/gmb-eudi/go-eudi-crypto` → v0.0.10, with `github.com/lestrrat-go/jwx/v3` v3.4.0 and the remaining dependency graph refreshed.
+
 ## v0.1.3
 
 **Requires Go 1.27.2.** The `go` directive moves up from 1.26.6, so a consumer on an older
